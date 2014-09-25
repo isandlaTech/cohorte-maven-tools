@@ -21,7 +21,6 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +33,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
 /**
  * Goal which prepare the test and packaging resources.
+ *
  * @author Bassem Debbabi
  *
  * @goal resources
@@ -93,8 +93,14 @@ public class ResourcesMojo
     */
 	private Map packageInstructions = new LinkedHashMap();
 
+    /**
+     * Resource configurations
+     */
     private Object rsLibDirectory;
-   
+
+    /**
+     * Package configurations.
+     */
     private Object pkgName;
     private Object pkgTopLevel;
     private Object pkgVersion;
@@ -109,6 +115,9 @@ public class ResourcesMojo
     private Object pkgClassifiers;
     private Object pkgTestSuite;
 
+    /**
+     * Test configurations.
+     */
 	private Object skipTest;
 
     /**
@@ -176,10 +185,30 @@ public class ResourcesMojo
                             artifactId("maven-dependency-plugin"),
                             version("2.8")
                     ),
+                    goal("copy-dependencies"),
+                    configuration(
+                            element(name("outputDirectory"), baseDir+rsLibDirectory.toString()),
+                            element(name("includeTypes"), "jar"),
+                            element(name("overWriteIfNewer"),"true"),
+                            element(name("overWriteReleases"),"true"),
+                            element(name("overWriteSnapshots"),"true"),
+                            element(name("excludeTransitive"), "false")
+                    ), executionEnvironment(
+                            m_project,
+                            m_session,
+                            m_pluginManager
+                    )
+            );
+            executeMojo(
+                    plugin(
+                            groupId("org.apache.maven.plugins"),
+                            artifactId("maven-dependency-plugin"),
+                            version("2.8")
+                    ),
                     goal("unpack-dependencies"),
                     configuration(
                             element(name("outputDirectory"), baseDir+rsLibDirectory.toString()),
-                            element(name("includes"), "**/*"),
+                            element(name("includeTypes"), "cohorte-bundle"),
                             element(name("overWriteIfNewer"),"true"),
                             element(name("overWriteReleases"),"true"),
                             element(name("overWriteSnapshots"),"true"),

@@ -29,10 +29,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import static java.nio.file.StandardCopyOption.*;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
 /**
  * Goal which construct the python package.
+ *
  * @author Bassem Debbabi
  *
  * @goal package
@@ -131,13 +131,20 @@ public class PackageMojo
      */
     private BuildPluginManager m_pluginManager;
 
+
+    /**
+     * Resource configurations
+     */
+    private Object rsLibDirectory;
+
+    /**
+     * Package configurations
+     */
 	private Object pkgTopLevel;
     private Object pkgName;
     private Object pkgVersion;
     private Object pkgSkipPackageSetup;
     private Object pkgSkipPackageSource;
-
-    private Object rsLibDirectory;
 
 	/**
 	* @parameter 
@@ -146,6 +153,9 @@ public class PackageMojo
 	*/
 	private Object verbose;
 
+    /**
+     * Prepare the MOJO parameters.
+     */
 	private void prepareParameters() {
 
         rsLibDirectory = resourcesInstructions.get("lib_directory");
@@ -188,7 +198,7 @@ public class PackageMojo
             prepareParameters();
 
             // MDEP-187
-            try {
+            /*try {
                 executeMojo(
                         plugin(
                                 groupId("org.apache.maven.plugins"),
@@ -198,7 +208,7 @@ public class PackageMojo
                         goal("unpack-dependencies"),
                         configuration(
                                 element(name("outputDirectory"), baseDir+"/target/"+pkgTopLevel.toString()),
-                                element(name("includes"), "**/*"),
+                                element(name("includes"), "** / *"),
                                 element(name("overWriteIfNewer"),"true"),
                                 element(name("overWriteReleases"),"true"),
                                 element(name("overWriteSnapshots"),"true"),
@@ -212,7 +222,7 @@ public class PackageMojo
             } catch (MojoExecutionException e) {
                 e.printStackTrace();
             }
-
+            */
     		try {
                 /* create package using setuptools */
                 if (pkgSkipPackageSetup.toString().equalsIgnoreCase("false")) {
@@ -242,6 +252,12 @@ public class PackageMojo
         }
     }
 
+    /**
+     * Creates a Source Archive.
+     * It contains only python files.
+     * @return
+     * @throws IOException
+     */
     private File createSourceArchive() throws IOException {
         getLog().info("Start creating maven source file...");
         File f1 = new File(baseDir+"/src/main/python");
@@ -252,6 +268,13 @@ public class PackageMojo
         return f2;
     }
 
+    /**
+     * Creates Distribution Zip file.
+     * Along with the source files, we also add setup.py and other files for packaging purpose.
+     * This is based on setuptool tool.
+     * @throws IOException
+     * @throws InterruptedException
+     */
     private void runSetupToolsPackaging() throws IOException, InterruptedException {
     	ProcessBuilder pb = new ProcessBuilder("python", "setup.py", "sdist", "--formats=zip");
     	pb.directory(new File(baseDir+"/target/"+pkgTopLevel));
@@ -272,6 +295,11 @@ public class PackageMojo
 		}
     }
 
+    /**
+     * Attach the a file to the maven project to be installed on maven repository.
+     * @param file
+     * @param type
+     */
     private void attachArtifact(File file, String type) {
         helper.attachArtifact(project, type, null, file);
     }
